@@ -1,25 +1,20 @@
 import subprocess
+import os
 
-#Automatically runs both potrace and juicy gcode when provided with a filename
+#Automatically runs juicy gcode when provided with a filename
 
-def runPotrace(filename):
-    #can replace this with a load from external file so that parameters can
-    #be tweaked without messing with the program
-    potraceArgs = "-s"
-    #potraceArgs3 = "-s" + filename + bmpExtension
-    #cwd may not be necessary
-    potraceResult = subprocess.run([potraceLit, potraceArgs, filename], cwd = r"/home/w003gsl/seniordesign/code/AutoDraw3000", capture_output=True)
-    if potraceResult.returncode != 0:
-        print(potraceResult.stderr)
-    return potraceResult.returncode
 
 def runJuicyGCode(filename):
     #can replace this with a load from external file so that parameters can
     #be tweaked without messing with the program
+    
     gCodeArgs2 = "-o" 
     gCodeOutputFile = "output.gcode"
-    #cwd may not be necessary
-    gCodeResult = subprocess.run([gCodeLit, filename, gCodeArgs2, gCodeOutputFile], cwd = r"/home/w003gsl/seniordesign/code/AutoDraw3000", capture_output=True)
+    
+    # Run the juicy-gcode tool with the specified arguments
+    gCodeResult = subprocess.run([gCodeLit, filename, gCodeArgs2, gCodeOutputFile], capture_output=True)
+    
+    # Check if the juicy-gcode tool encountered any errors
     if gCodeResult.returncode != 0:
         print(gCodeResult.stderr)
         return gCodeResult.returncode * 10
@@ -27,28 +22,24 @@ def runJuicyGCode(filename):
 
 
 #main
-bmpExtension = ".bmp"
-#svgExtension = ".svg"
-gcodeExtnsion = ".gcode"
-potraceLit = "potrace"
-gCodeLit = r"/home/w003gsl/seniordesign/juicy-gcode-1.0.0.0/juicy-gcode"
+# Get the current working directory
+path = os.getcwd()
+
+# Define the path to the juicy-gcode executable using the current directory
+gCodeLit = path + r"\JuicyG-Code\juicy-gcode-1.0.0.0-Windows\juicy-gcode.exe"
+
 finalReturnCode = 0
 
 
 #sanitization of filename goes here
 #config path to potrace and juicy, use os.resolve()?
 filename = input("Please enter a file name: ")
-if ".bmp" in filename:
-    print("Currently no support for potrace.")
-    #finalReturnCode += runPotrace(filename)
-    #finalReturnCode += runJuicyGCode(filename)
-    #I think I could pipe the output directly to potrace if I felt like not saving an intermediate file
-elif ".svg" in filename:
+if ".svg" in filename:
     finalReturnCode += runJuicyGCode(filename)
 else:
-    print("There is currently no support for that filename.\nPlease only use this program with .bmp or .svg files.")
+    print("There is currently no support for that filename.\nPlease only use this program with.svg files.")
 
-#finalReturnCode += runPotrace(filename)
+
 if finalReturnCode != 0:
     print("Could not convert files. Error code " + finalReturnCode.__str__())
 else:

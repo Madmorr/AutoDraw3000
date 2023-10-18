@@ -21,7 +21,8 @@ window.resizable(True, True)
 
 # Define the path to the juicy-gcode executable
 path = os.getcwd()
-gCodeLit = path + r"\JuicyG-Code\juicy-gcode-1.0.0.0-Windows\juicy-gcode.exe"
+gCodeLit = path + r"/JuicyG-Code/juicy-gcode-1.0.0.0-Linux/juicy-gcode-1.0.0.0/juicy-gcode"
+
 
 # global var to hold path of chosen file
 selected_file = ""
@@ -41,11 +42,17 @@ def runJuicyGCode(filename):
 # Function to open a file dialog for selecting an image
 def browse_image():
     global selected_file
-    file_path = filedialog.askopenfilename(filetypes=[("SVG files", "*.svg")])
+    file_path = filedialog.askopenfilename(filetypes=[("All Images", "*.png *.jpg *.jpeg *.bmp *.svg"), ("SVG files", "*.svg"), ("PNG files", "*.png"), ("JPEG files", "*.jpg;*.jpeg"), ("BMP files", "*.bmp")])
     if file_path:
         selected_file = file_path  
         display_image(file_path)
-        generate_button.config(state=tk.NORMAL)  # Enable the "Generate G-Code" button
+        # Check if SVG or another format
+        if selected_file.lower().endswith('.svg'):
+            convert_button.config(state=tk.DISABLED)
+            generate_button.config(state=tk.NORMAL)
+        else:
+            convert_button.config(state=tk.NORMAL)
+            generate_button.config(state=tk.DISABLED)
 
 
 # Function to be called when the button is clicked
@@ -88,6 +95,29 @@ def generate_gcode():
     else:
         gcodeDisplay.delete(1.0, tk.END)
         gcodeDisplay.insert(tk.END, "Please select an SVG file first.")
+        
+def convert_image_to_svg():
+    global selected_file
+
+    # Step 1: Convert the image to BMP format.
+    bmp_file = selected_file + ".bmp"
+    Image.open(selected_file).convert("L").save(bmp_file)  # Convert image to grayscale and save as BMP
+
+    # Step 2: Convert BMP to SVG using potrace.
+    svg_file_path = filedialog.asksaveasfilename(defaultextension=".svg", filetypes=[("SVG files", "*.svg")])
+    if not svg_file_path:  # If user cancels the save dialog
+        os.remove(bmp_file)  # remove temporary BMP file
+        return
+    subprocess.run(["potrace", bmp_file, "-s", "-o", svg_file_path])
+
+    # Step 3: Clean up the temporary BMP file.
+    os.remove(bmp_file)
+
+    # Step 4: Update GUI.
+    selected_file = svg_file_path  # update the selected file to the new SVG
+    display_image(svg_file_path)  # display the new SVG
+    convert_button.config(state=tk.DISABLED)
+    generate_button.config(state=tk.NORMAL)
 
 
 # Create a button widget to browse for an image
@@ -97,6 +127,10 @@ browse_button.pack()
 # Create a label widget to display the selected image
 imageLabel = tk.Label(window)
 imageLabel.pack(pady=30)  # Add some padding around the label
+
+# Create a button widget to convert to SVG
+convert_button = tk.Button(window, text="Convert to SVG", command=convert_image_to_svg, state=tk.DISABLED)
+convert_button.pack(pady=10)
 
 # Create a button widget to generate G-Code
 generate_button = tk.Button(window, text="Generate G-Code", command=generate_gcode, state=tk.DISABLED)

@@ -21,9 +21,9 @@ window.resizable(True, True)
 
 # Define the path to the juicy-gcode executable
 path = os.getcwd()
-gCodeLit = path + r"/JuicyG-Code/juicy-gcode-1.0.0.0-Linux/juicy-gcode-1.0.0.0/juicy-gcode"
+gCodeLit = path + r"/juicy-gcode"
 
-
+print (gCodeLit)
 # global var to hold path of chosen file
 selected_file = ""
 

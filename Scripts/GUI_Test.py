@@ -23,7 +23,6 @@ window.resizable(True, True)
 path = os.getcwd()
 gCodeLit = path + r"/juicy-gcode"
 
-print (gCodeLit)
 # global var to hold path of chosen file
 selected_file = ""
 

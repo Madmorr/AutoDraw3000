@@ -1,6 +1,7 @@
 import tkinter as tk
 import os
 import subprocess
+import platform
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from io import BytesIO
@@ -8,6 +9,14 @@ from svglib.svglib import svg2rlg
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.graphics import renderPDF  
 from pdf2image import convert_from_bytes  
+import paho.mqtt.publish as publish
+
+BROKER_IP = '10.16.62.201'
+
+def send_command(command):
+    publish.single("robot/control", command, hostname=BROKER_IP)
+  
+
 
 
 # Create the main window
@@ -19,9 +28,21 @@ window.geometry("800x600")
 window.resizable(True, True)
 
 
-# Define the path to the juicy-gcode executable
+# Get the current working directory
 path = os.getcwd()
-gCodeLit = path + r"/juicy-gcode"
+
+# Determine the operating system
+os_name = platform.system()
+
+# Define the path to the juicy-gcode executable based on the operating system
+if os_name == "Darwin":  # macOS
+    gCodeLit = os.path.join(path, "JuicyG-Code", "juicy-gcode-1.0.0.0-Mac", "juicy-gcode-1.0.0.0", "juicy-gcode")
+elif os_name == "Linux":
+    gCodeLit = os.path.join(path, "JuicyG-Code", "juicy-gcode-1.0.0.0-Linux", "juicy-gcode-1.0.0.0", "juicy-gcode")
+elif os_name == "Windows":
+    gCodeLit = os.path.join(path, "JuicyG-Code", "juicy-gcode-1.0.0.0-Windows", "juicy-gcode.exe")
+else:
+    raise Exception(f"Unsupported operating system: {os_name}")
 
 # global var to hold path of chosen file
 selected_file = ""
@@ -138,6 +159,23 @@ generate_button.pack(pady=10)
 # Create a Text widget to display the G-code
 gcodeDisplay = tk.Text(window, width=50, height=20)
 gcodeDisplay.pack(pady=10, padx=10)
+
+
+# Adding control buttons
+button_frame = tk.Frame(window)
+button_frame.pack()
+
+forward_button = tk.Button(button_frame, text="Forward", command=lambda: send_command("forward"))
+forward_button.pack(side=tk.TOP)
+
+backward_button = tk.Button(button_frame, text="Backward", command=lambda: send_command("backward"))
+backward_button.pack(side=tk.TOP)
+
+left_button = tk.Button(button_frame, text="Left", command=lambda: send_command("left"))
+left_button.pack(side=tk.LEFT)
+
+right_button = tk.Button(button_frame, text="Right", command=lambda: send_command("right"))
+right_button.pack(side=tk.RIGHT)
 
 
 # Start the main event loop
